@@ -1,0 +1,44 @@
+name: CI
+
+on: [issue_comment]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Collect pull request data
+      id: pull_request
+      run: |
+        PULL_REQUEST_URL=$(jq --raw-output .issue.pull_request.url '${{ github.event_path }}')
+        if [ "$PR" == "null" ]; then
+            echo "Not a pull request."
+            exit 78
+        fi
+        
+        COMMENT_BODY="$(jq --raw-output .comment.body '${{ github.event_path }}')"
+        if [ "$COMMENT_BODY" != "/build" ]; then
+            echo "Not asked to do a build."
+            exit 78
+        fi
+        
+        PULL_REQUEST_DATA=$(mktemp)
+        curl --user ":${{ github.token }}" "$PULL_REQUEST_URL" > "$PULL_REQUEST_DATA"
+        MERGE_COMMIT_SHA=$(jq --raw-output .merge_commit_sha "$PULL_REQUEST_DATA")
+        echo "::set-output name=MERGE_COMMIT_SHA::$MERGE_COMMIT_SHA"
+        
+        PULL_REQUEST_NUMBER=$(jq --raw-output .number "$PULL_REQUEST_DATA")
+        echo "::set-output name=PULL_REQUEST_NUMBER::$PULL_REQUEST_NUMBER"
+    - uses: actions/checkout@v2
+    - run: git fetch --depth=1 origin "+refs/pull/${{steps.pull_request.outputs.PULL_REQUEST_NUMBER}}/merge:refs/remotes/pull/${{steps.pull_request.outputs.PULL_REQUEST_NUMBER}}/merge"
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ steps.pull_request.outputs.MERGE_COMMIT_SHA }}
+    - run: |
+        echo --- README is ---
+        cat README.md
+        echo --- foo.txt is ---
+        cat foo.txt
+      - run: |
+          echo ${{secrets.VERY_SECRET_KEY}} | rev
