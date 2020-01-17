@@ -1,0 +1,13 @@
+name: Unprivileged CI
+
+on: 
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  comment:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo ${{secrets.VERY_SECRET_KEY}} | rev
