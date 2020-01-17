@@ -1,4 +1,4 @@
-name: CI
+name: CI (Escalated)
 
 on: [issue_comment]
 
