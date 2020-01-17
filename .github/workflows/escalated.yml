@@ -40,5 +40,5 @@ jobs:
         cat README.md
         echo --- foo.txt is ---
         cat foo.txt
-      - run: |
-          echo ${{secrets.VERY_SECRET_KEY}} | rev
+    - run: |
+        echo ${{secrets.VERY_SECRET_KEY}} | rev
